@@ -115,3 +115,20 @@ export function param2Obj(url) {
   })
   return obj
 }
+
+// 将列表型的数据转换成树形数据
+export function transListDataToTree(list, rootvalue) {
+  const arr = []
+  list.forEach(item => {
+    if (item.pid === rootvalue) {
+      const children = transListDataToTree(list, item.id)
+      if (children.length > 0) {
+        item.children = children
+      }
+      arr.push(item)
+    }
+  })
+  return arr
+}
+// 1.封装了一个函数 当rootvalue值为‘’时 返回值是一级部门
+// 2.当rootvalue的值为‘xxxx2c’ 时 返回值是子级部门
