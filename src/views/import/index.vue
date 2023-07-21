@@ -1,5 +1,9 @@
 <template>
   <upload-excel :on-success="handleSuccess" />
+  <!--
+    before upload :上传前校验
+    on-success：上传excel成功
+    -->
 </template>
 
 <script>
