@@ -7,11 +7,10 @@
         </template>
         <template #right>
           <el-button type="primary" size="small" @click="showDialog=true">添加员工</el-button>
-          <el-button type="primary" size="small">excel批量导入</el-button>
-          <el-button type="primary" size="small">导出</el-button>
+          <el-button type="primary" size="small" @click="$router.push('/import')">excel批量导入</el-button>
+          <el-button type="primary" size="small" @click="handleDownload">excel批量导出</el-button>
         </template>
       </pagetools>
-
       <el-card style="margin-top: 10px;">
         <el-table border :data="list">
           <el-table-column type="index" label="序号" sortable="" />
@@ -27,11 +26,11 @@
           </el-table-column>
           <el-table-column label="操作" sortable="" fixed="right" width="280">
             <template #default="{row}">
-              <el-button type="text" size="small">查看</el-button>
+              <el-button type="text" size="small" @click="$router.push('/employees/detail/${row.id}')">查看</el-button>
               <el-button type="text" size="small">转正</el-button>
               <el-button type="text" size="small">调岗</el-button>
               <el-button type="text" size="small">离职</el-button>
-              <el-button type="text" size="small">角色</el-button>
+              <el-button type="text" size="small" @click="clickRole(row.id)">角色</el-button>
               <el-button type="text" size="small" @click="reqDelEmployee(row.id)">删除</el-button>
             </template>
           </el-table-column>
@@ -47,7 +46,10 @@
           />
         </div>
       </el-card>
+
       <add-employee :show-dialog="showDialog" />
+      //分配角色弹层
+      <assign-role :show-role-dialog="showRoleDialog" user-id="userId" />
     </div>
   </div>
 </template>
@@ -57,10 +59,12 @@ import { reqGetEmployeeList, reqDelEmployee } from '@/api/employee'
 import EmployeesEnum from '@/api/constant/employees'
 import dayjs from 'dayjs'
 import addEmployee from './components/add-employee.vue'
+import AssignRole from './components/assign-role.vue'
 export default {
   name: 'Employees',
   components: {
-    addEmployee
+    addEmployee,
+    AssignRole
   },
   data() {
     return {
@@ -68,7 +72,10 @@ export default {
       page: 1,
       size: 5,
       total: 0,
-      showDialog: false
+      showDialog: false,
+      showRoleDialog: false,
+      // 用户id
+      userId: []
     }
   },
   created() {
@@ -108,6 +115,53 @@ export default {
       }).catch(() => {
         console.log('取消')
       })
+    },
+    // 批量导出员工
+    async handleDownload() {
+      // webpack语法
+      // 导入资源
+      import('@/vendor/Export2Excel').this(async excel => {
+        const headersArr = ['姓名', '手机号', '工号', '聘用形式', '部门', '入职时间']
+        const merges = ['A1:A2', 'B1:F1', 'G1:G2']
+        const headersRelations = {
+          '姓名': 'username',
+          '手机号': 'mobile',
+          '入职日期': 'timeOfEntry',
+          '聘用形式': 'formOfEmployment',
+          '转正日期': 'correctionTime',
+          '工号': 'workNumber',
+          '部门': 'departmentName'
+        }
+        // const filterVal = ['username', 'workNumber', 'mobile', 'formOFEmployment', 'formOFEmployment', 'timeOFEntry']
+        // const list = this.list
+        // const data = this.formatJson(filterVal, list)
+        excel.export_json_to_excel({
+          merges,
+          header: headersArr, // 表头
+          // eslint-disable-next-line no-undef
+          data, // 内容：二维数组
+          filename: '员工列表', // 导出文件名
+          autowidth: true, // 自动宽度
+          bookType: 'xlsx' // 导出文件扩展名
+        })
+        // 导出表格内容数据（所有员工数据）
+        const { data: { rows }} = await reqGetEmployeeList(1, this.total)
+        // 转换数据格式：获取的数据与导出的数据有差别
+        const arr = []
+        rows.forEach(item => {
+          const innerArr = []
+          headersArr.forEach(v => {
+            const enlistKey = headersRelations[v]
+            innerArr.push(item[enlistKey])
+          })
+          arr.push(innerArr)
+        })
+      })
+    },
+    // 分配角色
+    clickRole(id) {
+      this.userId = id
+      this.showRoleDialog = true
     }
   }
 }

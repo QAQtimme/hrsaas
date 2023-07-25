@@ -2,12 +2,16 @@
 import { reLogin, reqGetUserDerailById } from '@/api/user'
 import { setToken } from '@/utils/auth'
 import { reqGetUserInfo } from '@/api/user'
+import store from '..'
+import { resetRouter } from '@/router'
+
 const state = () => {
   return {
     token: 'getToken',
     userInfo: {}
   }
 }
+
 const mutations = {
   setToken(state, newToken) {
     state.token = newToken
@@ -34,8 +38,13 @@ const actions = {
     context.commit('setUserInfo', res1.data)
   },
   logout(context) {
-    context.commit('setToken', '')
-    context.commit('setUserInfo', {})
+    // 移除vuex中的token和userInfo
+    context.commit('removeToken', '')
+    context.commit('removeUserInfo', {})
+    // 重置路由
+    resetRouter()
+    // 重置vuex中的路由信息
+    store.commit('permission/setRoutes', [], { root: true })
   }
 }
 const getters = {}
@@ -47,3 +56,4 @@ export default {
   actions,
   getters
 }
+

@@ -8,8 +8,17 @@ export default {
     {
       path: '',
       name: 'employees',
-      component: () => import('@/views/employments/employees/'),
+      component: () => import('@/views/employees/employees'),
       meta: { title: '员工', icon: 'people' }
+    },
+    {
+      path: 'detail/id',
+      name: 'detail',
+      hidden: true,
+      component: () => import('@/views/employees/detail')
     }
   ]
 }
+
+// detail?idxxx              this.$router.query.id   =>  xxx
+// detaixxxx this.$router.query => xxx

@@ -45,3 +45,12 @@ export function reqUpdateRole(data) {
     data
   })
 }
+
+// 更新角色权限
+export function reqAssignPerm(data) {
+  return request({
+    url: '/sys/role/assignPrem',
+    method: 'put',
+    data
+  })
+}

@@ -69,13 +69,37 @@
           <el-button type="primary">确认</el-button>
         </template>
       </el-dialog>
+      <!-- 分配权限的弹层 -->
+      <el-dialog title="分配权限" :visible="showPermissionDialog" @close="handlePermissionDialogClose">
+        <el-tree
+          ref="tree"
+          v-loading="loading"
+          :data="PermissionData"
+          :props="{ label: 'name' }"
+          :default-expand-all="true"
+          :show-checkbox="true"
+          :check-strictly="true"
+          node-key="id"
+        />
+        <el-button size="small" type="success" @click="clickShowAssignDialog(row.id)">分配权限</el-button>
+        <template #footer>
+          <div style="text-align: right;">
+            <el-button @click="closeAssignDialog">取消</el-button>
+            <el-button type="primary">确定</el-button>
+          </div>
+        </template>
+      </el-dialog>
     </class>
   </div>
 </template>
 
 <script>
-import { reqGetRoleList, reqDelRole, reqAddRole,reqGetRoleDetail,reqUpdateRole } from '@/api/setting'
-import getCompany form from '@/api/company'
+// eslint-disable-next-line no-unused-vars
+import { reqGetRoleList, reqDelRole, reqAddRole, reqGetRoleDetail, reqUpdateRole } from '@/api/setting'
+import { reqGetCompany } from '@/api/company'
+import { reqGetPermissionList } from '@/api/permission'
+import { transListDataToTree } from '@/utils'
+import { reqAssignPerm } from '@/api/role'
 export default {
   name: 'Setting',
   data() {
@@ -87,6 +111,7 @@ export default {
       total: 0,
       loading: false,
       showDialog: false,
+      roleId: '', // 记录正在操作的角色id
       form: {
         name: '',
         description: ''
@@ -94,20 +119,23 @@ export default {
       rules: {
         name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
         description: [{ required: true, message: '请输入角色描述', trigger: 'blur' }]
-      }
+      },
+      showPermissionDialog: false,
+      PermissionData: [],
+
+      // 权限列表loading
+      treeLoading: false
+
     }
-  },
-  created() {
-    this.getRoleList() //获取角色列表
-    this.getCompany()  //获取公司信息
   },
   computed: {
     showTitle() {
-      return this.from.id === 'role'? '编辑角色' : '添加角色'
+      return this.from.id === 'role' ? '编辑角色' : '添加角色'
     }
   },
   created() {
-    this.getRoleList()
+    this.getRoleList() // 获取角色列表
+    this.getCompany() // 获取公司信息
   },
   methods: {
     async getRoleList() {
@@ -146,38 +174,57 @@ export default {
     },
     handleDialogClose() {
       this.showDialog = false
-      this.#refs.roleForm.resetFields()
+      this.$refs.roleForm.resetFields()
       this.form = {
         name: '',
         description: ''
       }
     },
-    clickSubmit(){
-      this.$refs.roleForm = validate(async valid => {
+    clickSubmit() {
+      this.$refs.roleForm.validate(async valid => {
         if (!valid) return
-        if(this.form.id){
-          await reqEditRole(this.form)
-          this.$message.success('修改成功')
-        } else {
+        if (this.form.id) {
           await reqAddRole(this.form)
           this.$message.success('添加成功')
         }
 
         await reqAddRole(this.form)
-        this.message.success('添加成功')
+        this.$message.success('添加成功')
         this.handleDialogClose()
         this.getRoleList()
       })
     },
-    async edit(id){
+    async edit(id) {
       this.showDialog = true
       const { data } = await reqGetRoleDetail(id)
       this.form = data
     },
-    async getCompany(id){
-      const company = this.$store.state .company
-      const { data } = await getCompany(id)
-            this.form = data
+    async reqGetCompany(id) {
+      const { data } = await reqGetCompany(id)
+      this.form = data
+    },
+    async clickShowAssignDialog(id) {
+      this.showAssignDialog = true
+      const res = await reqGetPermissionList()
+      this.PermissionData = transListDataToTree(res.data, '0')
+
+      const { data: { permIds }} = await reqGetRoleDetail(id)
+      this.$nextTick(() => {
+        this.$refs.tree.setCheckedKeys(permIds)
+      })
+    },
+    handlePermissionDialogClose() {
+      this.showPermissionDialog = false
+      this.$refs.tree.setCheckedKeys([])
+      this.treeLoading = false
+    },
+    async clickPermissionSubmit() {
+      await reqAssignPerm({
+        id: this.roleId,
+        permIds: this.$refs.tree.getCheckedKeys()
+      })
+      this.$message.success('分配权限成功')
+      this.handlePermissionDialogClose()
     }
   }
 }

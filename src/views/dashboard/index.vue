@@ -2,6 +2,7 @@
   <div class="dashboard-container">
     <!-- <div class="dashboard-text">name: {{ name }}</div> -->
     <div>首页</div>
+    <uploadimage />
   </div>
 </template>
 
@@ -16,6 +17,7 @@ export default {
       'name'
     ])
   },
+  // eslint-disable-next-line vue/order-in-components
   data() {
     return {
       value: ''
@@ -25,6 +27,7 @@ export default {
     beforeUpload() {
       // 判断文件大小是否下雨1M
       // 计算基础单位：字节byte 1kb=1024b 1M=1024kb 1G=1024mb
+      // eslint-disable-next-line no-undef
       const isLt1M = file.size / 1024 / 1024 < 1
       if (isLt1M) return true
       this.$message.warning('上传的文件大于1M')

@@ -3,11 +3,12 @@ import router from '@/router'
 import store from '@/store'
 import Nprogress from 'nprogress'
 import 'nprogress/nprogress.css'
+// import { asyncRoutes } from '@/router'
 
 // 路由前置守卫
 // to:要去的组件对象
 // from:从哪个组件来的对象
-// next:下一步  next()放行  next(flase)阻止放行   next(路径)跳转
+// next:下一步  next()放行  next(flase)阻止放行   next(路径)跳转  next(to)
 const whiteList = ['/login']
 
 router.beforeEach(async(to, from, next) => {
@@ -20,7 +21,19 @@ router.beforeEach(async(to, from, next) => {
       next('/')
     } else {
       if (!store.state.user.userInfo.userId) {
-        await store.dispatch('getUserInfo')
+        const userInfo = await store.dispatch('user/getUserInfo')
+        store.dispatch('permission/filterRouter', userInfo.roles.menus)
+        // console.log(userInfo)
+        const otherRoutes = await store.dispatch('permission/filterRouter', userInfo.roles.menus)
+        // console.log(otherRoutes)
+        router.addRoutes([...otherRoutes, { path: '*', redirect: '/404', hidden: true }])
+        // 获取用户信息后，动态添加路由
+        // router.addRoutes(asyncRoutes)
+        // next({
+        //  ...to,
+        //  replace: true
+        // })
+        return
       }
       next()
     }
