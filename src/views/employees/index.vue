@@ -26,12 +26,12 @@
           </el-table-column>
           <el-table-column label="操作" sortable="" fixed="right" width="280">
             <template #default="{row}">
-              <el-button type="text" size="small" @click="$router.push('/employees/detail/${row.id}')">查看</el-button>
+              <el-button :disabled="!checkPermission('point_user_show')" type="text" size="small" @click="$router.push('/employees/detail/${row.id}')">查看</el-button>
               <el-button type="text" size="small">转正</el-button>
               <el-button type="text" size="small">调岗</el-button>
               <el-button type="text" size="small">离职</el-button>
               <el-button type="text" size="small" @click="clickRole(row.id)">角色</el-button>
-              <el-button type="text" size="small" @click="reqDelEmployee(row.id)">删除</el-button>
+              <el-button :disabled="!checkPermission('point_user_show')" type="text" size="small" @click="reqDelEmployee(row.id)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -82,6 +82,16 @@ export default {
     this.getEmployeeList()
   },
   methods: {
+    // 按钮操作权
+    // 该方法在后续的组件中也会多次使用，封装起来
+    // 封装方法：混入mimix,自定义指令v-disabled='point_user_del'
+    checkPermission(key) {
+      if (this.$store.getters.roles.includes(key)) {
+        return true
+      } else {
+        return false
+      }
+    },
     async getEmployeeList() {
       this.loading = true
       const { data } = await reqGetEmployeeList(this.page, this.size)
