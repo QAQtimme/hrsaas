@@ -9,6 +9,8 @@
       <div :class="{'fixed-header':fixedHeader}">
         <!--导航栏组件-->
         <navbar />
+        <!--多页签组件-->
+        <tags-view />
       </div>
       <!--内容组件-->
       <app-main />

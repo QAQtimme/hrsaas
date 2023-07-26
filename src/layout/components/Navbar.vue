@@ -29,16 +29,19 @@
         </el-dropdown-menu>
       </el-dropdown>
     </div>
+    <screenfull class="right-menu-item hover-effect" />
   </div>
 </template>
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import Hamburger from '@/components/Hamburger'
-import defaultImg from '@/assets/common/head.jpg'
+import defaultImg from '@assets/common/head.jpg'
+import Screenfull from '@/utils/screenfull'
 export default {
   components: {
-    Hamburger
+    Hamburger,
+    Screenfull
   },
   data() {
     return {

@@ -5,9 +5,17 @@
 
 import PageTools from '../components/PageTools'
 import UploadExcel from '../components/UploadExcel'
+import UploadImage from '../components/UploadImage'
+import ScreenFull from '../components/ScreenFull'
+import Long from '../components/Long'
+import TagsView from '../components/TagsView'
 export default {
   install(Vue) {
     Vue.component('PageTools', PageTools)
     Vue.component('UplodadExcel', UploadExcel)
+    Vue.component('UploadImage', UploadImage)
+    Vue.component('ScreenFull', ScreenFull)
+    Vue.component('Long', Long)
+    Vue.component('TagsView', TagsView)
   }
 }

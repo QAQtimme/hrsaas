@@ -1,72 +1,122 @@
+'use strict'
+const path = require('path')
+const defaultSettings = require('./src/settings.js')
+
+function resolve(dir) {
+  return path.join(__dirname, dir)
+}
+
+const name = defaultSettings.title || 'vue Admin Template' // page title
+
+// If your port is set to 80,
+// use administrator privileges to execute the command line.
+// For example, Mac: sudo npm run
+// You can change the port by the following methods:
+// port = 9528 npm run dev OR npm run dev --port = 9528
+const port = process.env.port || process.env.npm_config_port || 9528 // dev port
+
+// All configuration item explanations can be find in https://cli.vuejs.org/config/
 module.exports = {
-  lintOnSave: false,
-  publicPath: './',
+  /**
+   * You will need to set publicPath if you plan to deploy your site under a sub path,
+   * for example GitHub Pages. If you plan to deploy your site to https://foo.github.io/bar/,
+   * then publicPath should be set to "/bar/".
+   * In most cases please use '/' !!!
+   * Detail: https://cli.vuejs.org/config/#publicpath
+   */
+  publicPath: '/',
+  outputDir: 'dist',
+  assetsDir: 'static',
+  lintOnSave: process.env.NODE_ENV === 'development',
+  productionSourceMap: false,
   devServer: {
-    proxy: {
-      // 跨域代理原理
-      // 跨域 不同源 端口 协议 域名
-      // 代理 服务器请求服务器不存在跨域 localhost 8080 接口 请求成功之后暂存到 本地服务器
-      // 项目内部请求数据是直接请求本地服务器 同源 本地服务器再请求线上服务器
-      '/api': { // 使用api代理
-        target: 'http:\\localhost:3000', // 代理的外网服务器基准路径
-        //   ws: true,
-        changeOrigin: true,
-        pathRewrite: {
-          '^/api': ''
-        }
+    port: 3030,
+    open: true,
+    overlay: {
+      warnings: false,
+      errors: true
+    }
+  },
+  configureWebpack: {
+    // provide the app's title in webpack's name field, so that
+    // it can be accessed in index.html to inject the correct title.
+    name: name,
+    resolve: {
+      alias: {
+        '@': resolve('src')
       }
     }
-
-  }
-}
-/**
-* 环境 项目运行的环境
-* 开发环境 在本地通过服务器运行的环境 脚手架借助node 搭建了服务器
-* 线上环境 直接可以在云服务器（线上网站）访问的环境
-* 开发->上线 cnpm run build  打包  脱离了node环境 代理跨域失效
-*
-* 配置 资源引用路径
-*
-* 分清楚当前是什么环境 开发 线上 环境
-*/
-
-module.exports = {
-  lintOnSave: false,
-  publicPath: './',
-  devServer: {
-    proxy: {
-      // 代理服务器的作用是将请求转发到目标服务器，以避免浏览器的跨域限制
-      // 例如，本地服务器通过代理服务器请求线上服务器的数据，就可以避免跨域问题
-      '/api': { // 将以/api开头的请求代理到目标服务器
-        target: 'http:\\localhost:3000', // 目标服务器的基准路径
-        changeOrigin: true, // 将请求头中的Origin字段设置为目标服务器的地址
-        pathRewrite: {
-          '^/api': '' // 将请求路径中的/api前缀替换为空字符串
-        }
+  },
+  chainWebpack(config) {
+    // it can improve the speed of the first screen, it is recommended to turn on preload
+    config.plugin('preload').tap(() => [
+      {
+        rel: 'preload',
+        // to ignore runtime.js
+        // https://github.com/vuejs/vue-cli/blob/dev/packages/@vue/cli-service/lib/config/app.js#L171
+        fileBlacklist: [/\.map$/, /hot-update\.js$/, /runtime\..*\.js$/],
+        include: 'initial'
       }
-    }
+    ])
+
+    // when there are many pages, it will cause too many meaningless requests
+    config.plugins.delete('prefetch')
+
+    // set svg-sprite-loader
+    config.module
+      .rule('svg')
+      .exclude.add(resolve('src/icons'))
+      .end()
+    config.module
+      .rule('icons')
+      .test(/\.svg$/)
+      .include.add(resolve('src/icons'))
+      .end()
+      .use('svg-sprite-loader')
+      .loader('svg-sprite-loader')
+      .options({
+        symbolId: 'icon-[name]'
+      })
+      .end()
+
+    config
+      .when(process.env.NODE_ENV !== 'development',
+        config => {
+          config
+            .plugin('ScriptExtHtmlWebpackPlugin')
+            .after('html')
+            .use('script-ext-html-webpack-plugin', [{
+            // `runtime` must same as runtimeChunk name. default is `runtime`
+              inline: /runtime\..*\.js$/
+            }])
+            .end()
+          config
+            .optimization.splitChunks({
+              chunks: 'all',
+              cacheGroups: {
+                libs: {
+                  name: 'chunk-libs',
+                  test: /[\\/]node_modules[\\/]/,
+                  priority: 10,
+                  chunks: 'initial' // only package third parties that are initially dependent
+                },
+                elementUI: {
+                  name: 'chunk-elementUI', // split elementUI into a single package
+                  priority: 20, // the weight needs to be larger than libs and app or it will be packaged into libs or app
+                  test: /[\\/]node_modules[\\/]_?element-ui(.*)/ // in order to adapt to cnpm
+                },
+                commons: {
+                  name: 'chunk-commons',
+                  test: resolve('src/components'), // can customize your rules
+                  minChunks: 3, //  minimum common number
+                  priority: 5,
+                  reuseExistingChunk: true
+                }
+              }
+            })
+          // https:// webpack.js.org/configuration/optimization/#optimizationruntimechunk
+          config.optimization.runtimeChunk('single')
+        }
+      )
   }
 }
-/**
-* 环境：项目运行的环境
-* 开发环境：在本地通过服务器运行的环境，脚手架借助Node.js搭建了服务器
-* 线上环境：直接可以在云服务器（线上网站）访问的环境
-* 开发->上线：通过npm run build命令打包项目，生成静态资源文件，脱离了Node.js环境，代理跨域失效
-*
-* 配置：资源引用路径
-*
-* 在开发环境和线上环境中，静态资源的引用路径不同，需要进行配置
-* 在开发环境中，静态资源的引用路径为相对路径，即./
-* 在线上环境中，静态资源的引用路径为绝对路径，即/
-* 为了避免手动修改引用路径，可以使用publicPath选项进行配置
-* publicPath选项的默认值为/，即绝对路径
-* 在本项目中，publicPath选项的值为./，即相对路径
-*
-* 代理：解决跨域问题
-*
-* 跨域是指在浏览器中发起的请求，如果请求的域名、端口、协议、路径中有任意一项不同，就会被浏览器拦截，这就是跨域问题。
-* 代理服务器的作用是将请求转发到目标服务器，以避免浏览器的跨域限制。
-* 在本项目中，代理服务器将以/api开头的请求代理到目标服务器，目标服务器的基准路径为http://localhost:3000。
-* 代理服务器会将请求头中的Origin字段设置为目标服务器的地址，以避免跨域问题。
-* 代理服务器还会将请求路径中的/api前缀替换为空字符串，以符合目标服务器的接口规范。
-*/

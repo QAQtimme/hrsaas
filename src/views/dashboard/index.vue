@@ -84,37 +84,37 @@
           <div slot="header" class="header">
             <span>绩效指数</span>
           </div>
-        <!-- 放置雷达图 -->
-        </el-card>
-        <!-- 帮助连接 -->
-        <el-card class="box-card">
-          <div class="header headTit">
-            <span>帮助链接</span>
-          </div>
-          <div class="sideLink">
-            <el-row>
-              <el-col :span="8">
-                <a href="#">
-                  <span class="icon iconGuide" />
-                  <p>入门指南</p>
-                </a>
-              </el-col>
-              <el-col :span="8">
-                <a href="#">
-                  <span class="icon iconHelp" />
-                  <p>在线帮助手册</p>
-                </a>
-              </el-col>
-              <el-col :span="8">
-                <a href="#">
-                  <span class="icon iconTechnology" />
-                  <p>联系技术支持</p>
-                </a>
-              </el-col>
-            </el-row>
-          </div>
-        </el-card>
-      </el-col>
+          <!-- 放置雷达图 -->
+          <radar />
+          <!-- 帮助连接 -->
+          <el-card class="box-card">
+            <div class="header headTit">
+              <span>帮助链接</span>
+            </div>
+            <div class="sideLink">
+              <el-row>
+                <el-col :span="8">
+                  <a href="#">
+                    <span class="icon iconGuide" />
+                    <p>入门指南</p>
+                  </a>
+                </el-col>
+                <el-col :span="8">
+                  <a href="#">
+                    <span class="icon iconHelp" />
+                    <p>在线帮助手册</p>
+                  </a>
+                </el-col>
+                <el-col :span="8">
+                  <a href="#">
+                    <span class="icon iconTechnology" />
+                    <p>联系技术支持</p>
+                  </a>
+                </el-col>
+              </el-row>
+            </div>
+          </el-card>
+        </el-card></el-col>
     </el-row>
   </div>
 </template>
@@ -122,11 +122,12 @@
 <script>
 import { mapGetters } from 'vuex'
 import workCalender from './compontents/work-calender.vue'
-
+import radar from './compontents/radar.vue'
 export default {
   name: 'Dashboard',
   components: {
-    workCalender
+    workCalender,
+    radar
   },
   data() {
     return {

@@ -6,11 +6,18 @@
         <!-- 年份取给定年份的, 前五年 + 后五年 -->
         <el-option v-for="item in yearList" :key="item" :label="item" :value="item" />
       </el-select>
-      <el-select v-model="currentMonth" size="small" style="width: 120px;">
+      <el-select v-model="currentMonth" size="small" style="width: 120px;" @change="changeDate">
         <el-option v-for="item in 12" :key="item" :label="item" :value="item" />
       </el-select>
     </div>
-    <el-calender v-model="currentDate" />
+    <el-calender v-model="currentDate">
+      <template #dateCell="{data}">
+        <div class="date-content">
+          <span class="text">{{ getDay(data.day) }}</span>
+          <span v-if="isWeek(date)" class="rest">休</span>
+        </div>
+      </template>
+    </el-calender>
   </div>
 </template>
 
@@ -43,6 +50,12 @@ export default {
       })
     }
   },
+  watch: {
+    currentDate(newValue) {
+      this.currentYear = newValue.getFullYear()
+      this.currentMonth = newValue.getMonth() + 1
+    }
+  },
   created() {
     this.currentYear = this.startDate.getFullYear() // 得到当前年份
     this.currentMonth = this.startDate.getMonth() + 1 // 当前月份
@@ -50,6 +63,14 @@ export default {
   methods: {
     changDate() {
       this.currentDate = new Date(this.currentYear, this.currentMonth - 1, 1)
+    },
+    getDay(time) {
+      const day = time.split('-')[2]
+      return day.startsWith('0') ? day.split('')[1] : day
+    },
+    isWeek(time) {
+      const day = new Date(time).getDay()
+      return day === 0 || day === 6
     }
   }
 }
@@ -100,4 +121,3 @@ export default {
    display: none
 }
 </style>
-
